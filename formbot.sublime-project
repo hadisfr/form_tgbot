@@ -1,0 +1,15 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+            "name": "Form Bot"
+		}
+	],
+    "settings": {
+        "python_interpreter": "$project_path/.env/bin/python",
+        "tab_size": 4,
+        "detect_indentation": true,
+        "auto_complete_triggers": [{"selector": "source.python", "characters": "."}]
+    }
+}
