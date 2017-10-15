@@ -2,8 +2,10 @@
 
 from time import time
 from sys import stderr
+from collections import OrderedDict
 
 import MySQLdb
+from openpyxl import Workbook
 
 from dict_wrapper import DictWrapper
 
@@ -63,6 +65,7 @@ class DBHndlr(object):
                 cols_str += ", %s %s" % (col[form_keys.db_key], col[form_keys.db_type])
             self.cursor.execute("create table %s (%s);" % (db_config.tbl_name, cols_str))
         self.config = db_config
+        self.report_keys = OrderedDict((col[form_keys.db_key], col[form_keys.report_key]) for col in cols)
 
     def __del__(self):
         try:
@@ -141,3 +144,14 @@ class DBHndlr(object):
 
     def set_status(self, uid, status):
         return self.set_attr(uid, self.config.status_key, status)
+
+    def export(self, addr):
+        print("exporting as XLSX to %s..." % addr, file=stderr)
+        wb = Workbook()
+        ws = wb.active
+        self.cursor.execute("select %s from %s;" % (", ".join(self.report_keys.keys()), self.config.tbl_name))
+        sheet = self.cursor.fetchall()
+        ws.append(list(self.report_keys.values()))
+        for row in sheet:
+            ws.append(row)
+        wb.save(addr)

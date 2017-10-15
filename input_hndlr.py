@@ -10,18 +10,19 @@ from db_hndlr import DBHndlr
 
 class InputHndlr:
     """form input handler"""
-    def __init__(self, tg_bot, db_hndlr, form_keys, cols, msg):
+    def __init__(self, tg_bot, db_hndlr, form_keys, cols, msg, report_file_addr):
         self.tg_bot = tg_bot
         self.db_hndlr = db_hndlr
         self.form_keys = form_keys
         self.cols = cols
         self.msg = msg
+        self.report_file_addr = report_file_addr
 
     def is_valid_msg(self, msg, index):
         if self.cols[index][self.form_keys.choices]:
             return msg in self.cols[index][self.form_keys.choices]
         else:
-            return re.match(pattern=self.cols[index][self.form_keys.mask], string=msg)
+            return re.fullmatch(pattern=self.cols[index][self.form_keys.mask], string=msg)
 
     def get_reply_markup(self, index):
         if self.cols[index][self.form_keys.choices]:
@@ -46,7 +47,6 @@ class InputHndlr:
         chat_id = msg.chat.id
         text = msg.text
         status = self.db_hndlr.get_status(usr_id)
-        self.tg_bot.send_message(chat_id, "%d\n%s\n%r" % (status, text, text == "/start"))
 
         if text == "/start":
             if not self.db_hndlr.existed(usr_id):
@@ -70,3 +70,13 @@ class InputHndlr:
                 reply_markup=self.get_reply_markup(status))
         else:
             self.tg_bot.send_message(chat_id, self.msg.done + self.get_report(usr_id))
+
+    def send_report(self, msg):
+        chat_id = msg.chat.id
+
+        if msg.from_user.username in self.tg_bot.admins:
+            self.db_hndlr.export(self.report_file_addr)
+            with open(self.report_file_addr, "rb") as f:
+                self.tg_bot.send_document(chat_id, f)
+        else:
+            self.tg_bot.send_message(chat_id, self.msg.e403)
