@@ -27,7 +27,11 @@ def main():
     bot.message_handler(commands=["report"])(input_hndlr.send_report)
     bot.message_handler(content_types=["text"])(input_hndlr.msg_handlr)
     bot.message_handler()(lambda msg: bot.send_message(msg.chat_id, config.tgbot.msg.e400))
-    bot.polling(none_stop=True)
+    while True:
+        try:
+            bot.polling(none_stop=True)
+        except Exception as ex:
+            print(ex, file=stderr)
 
 
 if __name__ == '__main__':
