@@ -38,6 +38,7 @@ class DBHndlr(object):
             exit()
         self.db.autocommit("on")
         self.cursor = self.db.cursor()
+        self.db.set_character_set('utf8')
         self.cursor.execute("SET NAMES %s", (db_config.encoding, ))
         self.cursor.execute("SET CHARACTER SET %s", (db_config.encoding,))
         self.cursor.execute("SET character_set_connection = %s", (db_config.encoding,))
