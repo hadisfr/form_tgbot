@@ -1,0 +1,33 @@
+{
+    "db": {
+        "usrname": "root",
+        "passwd": "",
+        "db_name": "form",
+        "tbl_name": "form",
+        "host": "localhost",
+        "encoding": "utf8mb4",
+        "primary_key": "id",
+        "status_key": "stat",
+        "timestamp_key": "ts"
+    },
+    "tgbot": {
+        "token": "",
+        "msg":{
+            "e422": "محتوای پردازش‌نشدنی\nلطفاً دوباره تلاش کنید.",
+            "e400": "درخواتس غلط\n دوباره تلاش کندی.",
+            "done": "شما اطلاعات زیر را وارد کرده‌اید. با استفاده از دستور /start می‌توانید از ابتدا اطلاعاتتان را وارد کنید و اشتباهات احتمالی را اصلاح کنید.\n\n",
+            "list_sign": "♦︎"
+        }
+    },
+    "cols": {
+        "file_addr": "cols.json",
+        "keys": {
+            "db_key": "db_key",
+            "db_type": "db_type",
+            "report_key": "report_key",
+            "mask": "mask",
+            "msg": "msg",
+            "choices": "choices"
+        }
+    }
+}

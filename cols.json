@@ -1,0 +1,10 @@
+[
+    {
+        "db_key": "key",
+        "db_type": "text",
+        "report_key": "key",
+        "mask": ".*",
+        "msg": "",
+        "choices": []
+    }
+]
