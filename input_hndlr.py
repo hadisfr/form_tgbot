@@ -48,7 +48,7 @@ class InputHndlr:
         text = msg.text
         status = self.db_hndlr.get_status(usr_id)
 
-        if text == "/start":
+        if text == "/start" or status == DBHndlr.CellNotFound:
             if not self.db_hndlr.existed(usr_id):
                 self.db_hndlr.create_row(usr_id)
             status = 0

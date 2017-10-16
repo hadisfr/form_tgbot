@@ -150,7 +150,11 @@ class DBHndlr(object):
         print("exporting as XLSX to %s..." % addr, file=stderr)
         wb = Workbook()
         ws = wb.active
-        self.cursor.execute("select %s from %s;" % (", ".join(self.report_keys.keys()), self.config.tbl_name))
+        self.cursor.execute(
+            "select %s from %s where %s = %s;" % (
+                ", ".join(self.report_keys.keys()),
+                self.config.tbl_name, self.config.status_key, "%s"),
+            (len(self.report_keys),))
         sheet = self.cursor.fetchall()
         ws.append(list(self.report_keys.values()))
         for row in sheet:
