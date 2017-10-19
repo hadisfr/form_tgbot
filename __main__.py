@@ -20,15 +20,15 @@ def main():
     with open(config.cols.file_addr) as f:
         cols = json.load(f)
 
-    db_hndlr = DBHndlr(config.db, config.cols.keys, cols)
-    bot = telebot.TeleBot(config.tgbot.token)
-    bot.admins = config.tgbot.admins
-    input_hndlr = InputHndlr(bot, db_hndlr, config.cols.keys, cols, config.tgbot.msg, config.report_file_addr)
-    bot.message_handler(commands=["report"])(input_hndlr.send_report)
-    bot.message_handler(content_types=["text"])(input_hndlr.msg_handlr)
-    bot.message_handler()(lambda msg: bot.send_message(msg.chat_id, config.tgbot.msg.e400))
     while True:
         try:
+            db_hndlr = DBHndlr(config.db, config.cols.keys, cols)
+            bot = telebot.TeleBot(config.tgbot.token)
+            bot.admins = config.tgbot.admins
+            input_hndlr = InputHndlr(bot, db_hndlr, config.cols.keys, cols, config.tgbot.msg, config.report_file_addr)
+            bot.message_handler(commands=["report"])(input_hndlr.send_report)
+            bot.message_handler(content_types=["text"])(input_hndlr.msg_handlr)
+            bot.message_handler()(lambda msg: bot.send_message(msg.chat_id, config.tgbot.msg.e400))
             bot.polling(none_stop=True)
         except Exception as ex:
             print(ex, file=stderr)
