@@ -7,8 +7,6 @@ from collections import OrderedDict
 import sqlite3
 from openpyxl import Workbook
 
-from dict_wrapper import DictWrapper
-
 
 class DBHndlr(object):
     """MySql Database Handler"""

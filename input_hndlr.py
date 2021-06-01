@@ -4,7 +4,6 @@ import re
 
 import telebot
 
-from dict_wrapper import DictWrapper
 from db_hndlr import DBHndlr
 
 
