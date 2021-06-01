@@ -19,7 +19,7 @@ class InputHndlr:
         self.db_config = db_config
 
     def is_valid_msg(self, msg, index):
-        if self.cols[index][self.form_keys.choices]:
+        if self.cols[index][self.form_keys.choices] and not self.cols[index][self.form_keys.mask]:
             return msg in self.cols[index][self.form_keys.choices]
         else:
             return re.fullmatch(pattern=self.cols[index][self.form_keys.mask], string=msg)
