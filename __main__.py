@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import json
-import getpass
+import traceback
 from sys import stderr
 
 import telebot
@@ -32,6 +32,7 @@ def main():
             bot.polling(none_stop=True)
         except Exception as ex:
             print(ex, file=stderr)
+            traceback.print_exc()
 
 
 if __name__ == '__main__':
