@@ -16,7 +16,6 @@ CONFIG_FILE_ADDR = "config.json"
 def main():
     with open(CONFIG_FILE_ADDR) as f:
         config = DictWrapper(json.load(f))
-    config.db.passwd = getpass.getpass("DB passwd for %s@%s:" % (config.db.usrname, config.db.host))
     with open(config.cols.file_addr) as f:
         cols = json.load(f)
 

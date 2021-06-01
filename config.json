@@ -1,11 +1,8 @@
 {
     "db": {
-        "usrname": "root",
-        "passwd": "",
+        "url": "./form.db",
         "db_name": "form",
         "tbl_name": "form",
-        "host": "localhost",
-        "encoding": "utf8mb4",
         "primary_key": "id",
         "status_key": "stat",
         "timestamp_key": "ts"

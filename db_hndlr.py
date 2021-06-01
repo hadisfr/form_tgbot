@@ -4,7 +4,7 @@ from time import time
 from sys import stderr
 from collections import OrderedDict
 
-import MySQLdb
+import sqlite3
 from openpyxl import Workbook
 
 from dict_wrapper import DictWrapper
@@ -18,45 +18,19 @@ class DBHndlr(object):
 
     ROW_NOT_FOUND_STAT = -1
 
-    class CellNotFound(MySQLdb.DatabaseError):
+    class CellNotFound(sqlite3.Error):
         """database cell not found excpetion.
 
-        inherited from MySQLdb.DatabaseError.
+        inherited from sqlite3.Error.
         """
         def __init__(self, *args, **argv):
             super().__init__(*args, **argv)
 
     def __init__(self, db_config, form_keys, cols):
-        try:
-            self.db = MySQLdb.connect(
-                host=db_config.host,
-                user=db_config.usrname,
-                passwd=db_config.passwd,
-                use_unicode=True)
-        except MySQLdb.OperationalError as ex:
-            print("DB login err. %s" % ex, file=stderr)
-            exit()
-        self.db.autocommit("on")
-        self.cursor = self.db.cursor()
-        self.db.set_character_set('utf8')
-        self.cursor.execute("SET NAMES %s", (db_config.encoding, ))
-        self.cursor.execute("SET CHARACTER SET %s", (db_config.encoding,))
-        self.cursor.execute("SET character_set_connection = %s", (db_config.encoding,))
-        try:
-            self.cursor.execute("use %s;" % (db_config.db_name,))
-        except MySQLdb.OperationalError as ex:
-            if ex.args[0] == self.__class__.DATABASE_NOT_FOUND:
-                print("DB not found.\nCreating db %s..." % db_config.db_name, file=stderr)
-                self.cursor.execute(
-                    "create database %s character set %s;" % (
-                        db_config.db_name,
-                        db_config.encoding))
-                self.cursor.execute("use %s;" % (db_config.db_name,))
-            else:
-                raise
-
-        self.cursor.execute("show tables;")
-        tbls = [i[0] for i in self.cursor.fetchall()]
+        self.url = db_config.url
+        conn, cursor = self.get_conn()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tbls = [i[0] for i in cursor.fetchall()]
         if db_config.tbl_name not in tbls:
             print("Table not found.\nCreating table %s..." % db_config.tbl_name, file=stderr)
             cols_str = "%s %s not null PRIMARY KEY" % (db_config.primary_key, "bigint")
@@ -64,78 +38,95 @@ class DBHndlr(object):
             cols_str += ", %s %s not null" % (db_config.timestamp_key, "int")
             for col in cols:
                 cols_str += ", %s %s" % (col[form_keys.db_key], col[form_keys.db_type])
-            self.cursor.execute("create table %s (%s);" % (db_config.tbl_name, cols_str))
+            cursor.execute("create table %s (%s);" % (db_config.tbl_name, cols_str))
+        conn.commit()
+        conn.close()
         self.config = db_config
         self.report_keys = OrderedDict((col[form_keys.db_key], col[form_keys.report_key]) for col in cols)
 
-    def __del__(self):
+    def get_conn(self):
         try:
-            self.db.close()
-        except AttributeError:
-            pass
-
-    def get_cursor(self):
-        return self.cursor
-
-    def get_db(self):
-        return self.db
+            conn = sqlite3.connect(self.url)
+        except sqlite3.Error as ex:
+            print("DB login err. %s" % ex, file=stderr)
+            # exit()
+        cursor = conn.cursor()
+        cursor.execute("pragma encoding=utf8")
+        return conn, cursor
 
     def existed(self, uid):
-        return bool(self.cursor.execute(
+        conn, cursor = self.get_conn()
+        cursor.execute(
             "select * from %s where %s = %s" % (
                 self.config.tbl_name,
                 self.config.primary_key,
-                "%s"),
-            (uid,)))
+                "?"),
+            (uid,))
+        res = bool(cursor.fetchone())
+        conn.close()
+        return res
 
     def create_row(self, uid):
         try:
-            return self.cursor.execute(
+            conn, cursor = self.get_conn()
+            cursor.execute(
                 "insert into %s (%s, %s, %s) values(%s, %s, %s);" % (
                     self.config.tbl_name,
                     self.config.primary_key,
                     self.config.status_key,
                     self.config.timestamp_key,
-                    "%s",
-                    "%s",
-                    "%s"),
+                    "?",
+                    "?",
+                    "?"),
                 (uid, 0, int(time())))
-        except MySQLdb.DatabaseError as ex:
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as ex:
+            conn.close()
             if ex.args[0] == self.__class__.DUPLICATE_KEY:
                 print("ERR: Duplicate UID. %s" % ex, file=stderr)
-                return 0
+                return False
             else:
                 raise
 
     def get_attr(self, uid, key):
-        if self.cursor.execute(
-                "select %s from %s where %s = %s" % (
-                    key,
-                    self.config.tbl_name,
-                    self.config.primary_key,
-                    "%s"),
-                (uid,)):
-            return self.cursor.fetchone()[0]
-        else:
+        conn, cursor = self.get_conn()
+        cursor.execute(
+            "select %s from %s where %s = %s" % (
+                key,
+                self.config.tbl_name,
+                self.config.primary_key,
+                "?"),
+            (uid,))
+        res = cursor.fetchone()
+        conn.close()
+        if not res:
             raise self.CellNotFound()
+        return res[0]
 
     def set_attr(self, uid, key, val):
         if not self.existed(uid):
             self.create_row(uid)
         try:
-            return self.cursor.execute(
+            conn, cursor = self.get_conn()
+            cursor.execute(
                 "update %s set %s = %s, %s = %s where %s = %s;" % (
                     self.config.tbl_name,
                     key,
-                    "%s",
+                    "?",
                     self.config.timestamp_key,
-                    "%s",
+                    "?",
                     self.config.primary_key,
-                    "%s"),
+                    "?"),
                 (val, int(time()), uid))
-        except MySQLdb.DatabaseError as ex:
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as ex:
+            conn.close()
             print("ERR: %s" % ex, file=stderr)
-            return 0
+            return False
 
     def get_status(self, uid):
         try:
@@ -150,13 +141,15 @@ class DBHndlr(object):
         print("exporting as XLSX to %s..." % addr, file=stderr)
         wb = Workbook()
         ws = wb.active
-        self.cursor.execute(
+        conn, cursor = self.get_conn()
+        cursor.execute(
             "select %s from %s where %s = %s;" % (
                 ", ".join(self.report_keys.keys()),
-                self.config.tbl_name, self.config.status_key, "%s"),
+                self.config.tbl_name, self.config.status_key, "?"),
             (len(self.report_keys),))
-        sheet = self.cursor.fetchall()
+        sheet = cursor.fetchall()
         ws.append(list(self.report_keys.values()))
         for row in sheet:
             ws.append(row)
+        conn.close()
         wb.save(addr)

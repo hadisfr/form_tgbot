@@ -3,5 +3,6 @@
 __pycache__
 .DS_Store
 log.*
+*.db
 *.xlsx
 *.sublime-workspace
