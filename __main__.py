@@ -24,7 +24,7 @@ def main():
             db_hndlr = DBHndlr(config.db, config.cols.keys, cols)
             bot = telebot.TeleBot(config.tgbot.token)
             bot.admins = config.tgbot.admins
-            input_hndlr = InputHndlr(bot, db_hndlr, config.cols.keys, cols, config.tgbot.msg, config.report_file_addr)
+            input_hndlr = InputHndlr(bot, db_hndlr, config.cols.keys, cols, config.tgbot.msg, config.report_file_addr, config.db)
             bot.message_handler(commands=["report"])(input_hndlr.send_report)
             bot.message_handler(content_types=["text"])(input_hndlr.msg_handlr)
             bot.message_handler()(lambda msg: bot.send_message(msg.chat.id, config.tgbot.msg.e400))

@@ -33,6 +33,8 @@ class DBHndlr(object):
             print("Table not found.\nCreating table %s..." % db_config.tbl_name, file=stderr)
             cols_str = "%s %s not null PRIMARY KEY" % (db_config.primary_key, "bigint")
             cols_str += ", %s %s not null" % (db_config.status_key, "int")
+            cols_str += ", %s %s not null" % (db_config.chat_key, "int")
+            cols_str += ", %s %s" % (db_config.username_key, "text")
             cols_str += ", %s %s not null" % (db_config.timestamp_key, "int")
             for col in cols:
                 cols_str += ", %s %s" % (col[form_keys.db_key], col[form_keys.db_type])
@@ -64,19 +66,21 @@ class DBHndlr(object):
         conn.close()
         return res
 
-    def create_row(self, uid):
+    def create_row(self, uid, chat_id):
         try:
             conn, cursor = self.get_conn()
             cursor.execute(
-                "insert into %s (%s, %s, %s) values(%s, %s, %s);" % (
+                "insert into %s (%s, %s, %s, %s) values(%s, %s, %s, %s);" % (
                     self.config.tbl_name,
                     self.config.primary_key,
                     self.config.status_key,
+                    self.config.chat_key,
                     self.config.timestamp_key,
                     "?",
                     "?",
+                    "?",
                     "?"),
-                (uid, 0, int(time())))
+                (uid, 0, chat_id, int(time())))
             conn.commit()
             conn.close()
             return True

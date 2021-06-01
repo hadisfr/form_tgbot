@@ -5,6 +5,8 @@
         "tbl_name": "form",
         "primary_key": "id",
         "status_key": "stat",
+        "chat_key": "chat_id",
+        "username_key": "username_id",
         "timestamp_key": "ts"
     },
     "tgbot": {

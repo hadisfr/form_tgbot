@@ -9,13 +9,14 @@ from db_hndlr import DBHndlr
 
 class InputHndlr:
     """form input handler"""
-    def __init__(self, tg_bot, db_hndlr, form_keys, cols, msg, report_file_addr):
+    def __init__(self, tg_bot, db_hndlr, form_keys, cols, msg, report_file_addr, db_config):
         self.tg_bot = tg_bot
         self.db_hndlr = db_hndlr
         self.form_keys = form_keys
         self.cols = cols
         self.msg = msg
         self.report_file_addr = report_file_addr
+        self.db_config = db_config
 
     def is_valid_msg(self, msg, index):
         if self.cols[index][self.form_keys.choices]:
@@ -44,13 +45,15 @@ class InputHndlr:
     def msg_handlr(self, msg):
         usr_id = msg.from_user.id
         chat_id = msg.chat.id
+        username = msg.from_user.username
         text = msg.text
         status = self.db_hndlr.get_status(usr_id)
 
         if text == "/start" or status == DBHndlr.CellNotFound:
             if not self.db_hndlr.existed(usr_id):
-                self.db_hndlr.create_row(usr_id)
+                self.db_hndlr.create_row(usr_id, chat_id)
             status = 0
+            self.db_hndlr.set_attr(usr_id, self.db_config.username_key, username)
             self.db_hndlr.set_status(usr_id, status)
         elif status >= len(self.cols):
             pass
