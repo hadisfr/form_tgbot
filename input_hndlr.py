@@ -74,6 +74,7 @@ class InputHndlr:
             self.tg_bot.send_message(chat_id, self.msg.done + self.get_report(usr_id))
 
     def send_report(self, msg):
+        usr_id = msg.from_user.id
         chat_id = msg.chat.id
 
         if msg.from_user.username in self.tg_bot.admins:
@@ -81,4 +82,4 @@ class InputHndlr:
             with open(self.report_file_addr, "rb") as f:
                 self.tg_bot.send_document(chat_id, f)
         else:
-            self.tg_bot.send_message(chat_id, self.msg.e403)
+            self.tg_bot.send_message(chat_id, self.get_report(usr_id))
