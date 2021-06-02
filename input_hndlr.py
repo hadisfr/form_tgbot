@@ -41,8 +41,13 @@ class InputHndlr:
             res += "%s %s:\t%s\n" % (
                 self.msg.list_sign,
                 col[self.form_keys.report_key],
-                self.db_hndlr.get_attr(uid, col[self.form_keys.db_key]))
+                self.prettify(self.db_hndlr.get_attr(uid, col[self.form_keys.db_key])))
         return res
+
+    def prettify(self, text):
+        if not text:
+            text = ""
+        return text
 
     def normalize(self, text):
         text = text.replace("۰", "0")
@@ -101,5 +106,7 @@ class InputHndlr:
             self.db_hndlr.export(self.report_file_addr)
             with open(self.report_file_addr, "rb") as f:
                 self.tg_bot.send_document(chat_id, f)
+        elif not self.db_hndlr.existed(usr_id):
+            self.tg_bot.send_message(chat_id, self.msg.nodata)
         else:
             self.tg_bot.send_message(chat_id, self.get_report(usr_id))
