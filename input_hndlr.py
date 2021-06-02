@@ -20,8 +20,10 @@ class InputHndlr:
 
     def is_valid_msg(self, msg, index):
         if self.cols[index][self.form_keys.choices] and not self.cols[index][self.form_keys.mask]:
-            return msg in self.cols[index][self.form_keys.choices]
+            return msg in set(map(self.normalize, self.cols[index][self.form_keys.choices]))
         else:
+            if msg == "":
+                msg = "."
             return re.fullmatch(pattern=self.cols[index][self.form_keys.mask], string=msg)
 
     def get_reply_markup(self, index):
@@ -42,11 +44,28 @@ class InputHndlr:
                 self.db_hndlr.get_attr(uid, col[self.form_keys.db_key]))
         return res
 
+    def normalize(self, text):
+        text = text.replace("۰", "0")
+        text = text.replace("۱", "1")
+        text = text.replace("۲", "2")
+        text = text.replace("۳", "3")
+        text = text.replace("۴", "4")
+        text = text.replace("۵", "5")
+        text = text.replace("۶", "6")
+        text = text.replace("۷", "7")
+        text = text.replace("۸", "8")
+        text = text.replace("۹", "9")
+        text = text.replace("ي", "ی")
+        text = text.replace("ك", "ک")
+        if text.strip() == ".":
+            text = ""
+        return text
+
     def msg_handlr(self, msg):
         usr_id = msg.from_user.id
         chat_id = msg.chat.id
         username = msg.from_user.username
-        text = msg.text
+        text = self.normalize(msg.text)
         status = self.db_hndlr.get_status(usr_id)
 
         if text == "/start" or status == DBHndlr.CellNotFound:
@@ -55,6 +74,7 @@ class InputHndlr:
             status = 0
             self.db_hndlr.set_attr(usr_id, self.db_config.username_key, username)
             self.db_hndlr.set_status(usr_id, status)
+            self.tg_bot.send_message(chat_id, self.msg.start)
         elif status >= len(self.cols):
             pass
         elif (
