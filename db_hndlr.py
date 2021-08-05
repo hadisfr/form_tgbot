@@ -9,7 +9,7 @@ from openpyxl import Workbook
 
 
 class DBHndlr(object):
-    """MySql Database Handler"""
+    """SQLite3 Database Handler"""
 
     DATABASE_NOT_FOUND = 1049
     DUPLICATE_KEY = 1062
